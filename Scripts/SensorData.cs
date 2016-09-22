@@ -45,8 +45,12 @@ namespace ViAgents
 
 		public override string ToString ()
 		{
-			return string.Format ("[{0}] {1}, {2}, {3}-{4}", Sensor, SensorRequest, Priority, Start, Finish);
-		}
+		    if (Start >= 0)
+		    {
+                return string.Format("[{0}, {2}] {1} ({3:00}:00-{4:00}:00)", Sensor, SensorRequest, Priority, Start, Finish);
+            }
+            return string.Format("[{0}, {2}] {1}, (no limit)", Sensor, SensorRequest, Priority);
+        }
 	}
 }
 

@@ -37,7 +37,7 @@ namespace ViAgents.Schedules {
 			if (timeControl == null) {
 				timeControl = GameObject.Find (DayNightCycle.GameObjectName).GetComponent<DayNightCycle> ();
 			}
-			timeControl.HourChanged += CheckSchedule;
+			// timeControl.HourChanged += CheckSchedule;
 
 			// control the schedule
 			CheckSchedule (timeControl, timeControl.Hour, timeControl.Minute);
@@ -56,36 +56,48 @@ namespace ViAgents.Schedules {
 //					scheduledItem.endHour + scheduledItem.endMinutes / 60));
 //		}
 
+
+	    private float currentTime = 0f;
+	    void Update()
+	    {
+	        if (Math.Abs(timeControl.SunTime - currentTime) > 0.25)
+	        {
+	            currentTime = timeControl.SunTime;
+                this.Check();
+            }
+	        
+	    }
+
 		public void Check(bool currentFinished = false) {
 		    if (currentFinished)
 		    {
 		        currentItem = null;
 		    }
-			StartCoroutine (Check (timeControl, timeControl.Hour, timeControl.Minute));
+			Check (timeControl, timeControl.Hour, timeControl.Minute);
 		}
 
 		void CheckSchedule (DayNightCycle sender, int hours, int minutes)
 		{
-			Console.WriteLine ("YES");
-			StartCoroutine(Check(sender, hours, minutes)); 
+			Check(sender, hours, minutes); 
 		}
 
-		IEnumerator Check (DayNightCycle sender, int hours, int minutes) {
-//			Debug.Log ("Checking scedule at " + hours + ":" + minutes);
+		void Check (DayNightCycle sender, int hours, int minutes) {
+			// Debug.Log ("Checking scedule at " + hours + ":" + minutes);
 			var item = schedule.Find (hours, minutes);
 			if (item == null) {
 				Debug.LogError(gameObject.name + " has nothing planned for this hour!");
-				yield break;
+				return;
 			}
 			if (item != currentItem) {
 				currentItem = item;
-				Loom.QueueOnMainThread(() =>
-					this.agent.Sense (new SensorData(
-						Sensor.Schedule, 
-						currentItem.action, 
-						SchedulerPriority, 
-						currentItem.startHour + currentItem.startMinutes / 60,
-						currentItem.endHour + currentItem.endMinutes / 60)));
+				//Loom.QueueOnMainThread(() =>
+			    this.agent.Sense(new SensorData(
+			        Sensor.Schedule,
+			        currentItem.action,
+			        SchedulerPriority,
+			        currentItem.startHour + currentItem.startMinutes/60,
+			        currentItem.endHour + currentItem.endMinutes/60));
+			    //);
 			} 
 		}
 	}

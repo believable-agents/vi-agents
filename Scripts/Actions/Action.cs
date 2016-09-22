@@ -78,8 +78,25 @@ namespace ViAgents.Actions
 //			bt.StartGraph(() => agent.ActionFinished(this));
 
 			// switch to new
-			bt.SwitchBehaviour(BT, (result) => agent.ActionFinished(this));
-			bt.repeat = runForever;
+		    agent.Log(LogSource.Action, "BT Start");
+		    if (BT.name == bt.graph.name)
+		    {
+                agent.Log(LogSource.Action, "Same graph, restarting");
+                bt.StartBehaviour((result) =>
+                {
+                    agent.Log(LogSource.Action, "BT Finished");
+                    agent.ActionFinished(this);
+                });
+		    }
+		    else
+		    {
+		        bt.SwitchBehaviour(BT, (result) =>
+		        {
+		            agent.Log(LogSource.Action, "BT Finished");
+		            agent.ActionFinished(this);
+		        });
+		    }
+		    bt.repeat = runForever;
 
 			return bt.behaviour;
 		}
@@ -104,7 +121,7 @@ namespace ViAgents.Actions
 
 		public override string ToString ()
 		{
-			return string.Format ("{0} from {1}, {2}", BT.name, sensor, sensorRequest);
+			return string.Format ("[{0}: {1}] Tree '{2}'", sensor, sensorRequest, BT.name);
 		}
 	}
 }

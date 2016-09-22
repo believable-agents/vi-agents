@@ -8,37 +8,58 @@ using ViAgents.Schedules;
 
 namespace ViAgents
 {
-	public class ViAgent : MonoBehaviour
+    public enum LogSource
+    {
+        Action,
+        Queue,
+        Sensor
+    }
+
+    public struct LogMessage
+    {
+        public LogSource Source;
+        public string Message;
+
+        public LogMessage(LogSource source, string message)
+        {
+            this.Source = source;
+            this.Message = message;
+        }
+    }
+
+    public class ViAgent : MonoBehaviour
 	{
 		static DayNightCycle timeControl;
 
-		private List<string> log = new List<string>();
+		public List<LogMessage> log = new List<LogMessage>();
 		public List<ActionSet> actions;
 		public List<StateParameter> state;
-
-
 
 		private List<SensorData> workQueue = new List<SensorData> ();
 		private SensorData currentItem;
 		private SensorData willExecute;
 		private Action currentAction;
 		private Scheduler scheduler;
-		private string logMessage = "";
+		//private string logMessage = "";
 
-		[SerializeField]
+
+        [SerializeField]
 		private bool isSleeping;
 		public bool IsSleeping {
 			get { return this.isSleeping; }
 			set { 
-				this.Log("Sleeping: " + value);
+				this.Log(LogSource.Action, "AGENT: Sleeping " + value);
 				this.isSleeping = value; 
 			}
 		}
 
-		public string LogMessage { get { return logMessage; } }
+		//public string LogMessage { get { return logMessage; } }
 		public List<SensorData> WorkQueue { get { return this.workQueue; } }
 		public SensorData CurrentItem { get { return this.currentItem; } }
 		public Action CurrentAction { get { return this.currentAction; } }
+
+        [HideInInspector]
+        public bool keepLog = false;
 
 		void Awake() {
 			// we need to keep time in order to filter actions by expiration
@@ -48,19 +69,20 @@ namespace ViAgents
 		}
 
 
-		public void Log (string message) {
-			Debug.Log(gameObject.name + ": " + message);
+		public void Log (LogSource source, string message) {
+			// Debug.Log(gameObject.name + ": " + message);
 
-			log.Insert(0, string.Format("[{0}] {1}", timeControl.CurrentTime, message));
-			if (log.Count > 30)
+			log.Insert(0, new LogMessage(source, string.Format("[{0}] {1}: {2}", 
+                timeControl.CurrentTime, source.ToString().ToUpper(), message)));
+			if (!keepLog && log.Count > 50)
 			{
-				log.RemoveAt(30);
+				log.RemoveAt(50);
 			}
-			logMessage = string.Join("\n", this.log.ToArray());
+			// logMessage = string.Join("\n", this.log.ToArray());
 		}
 
 		public void ActionFinished(Action action) {
-			this.Log ("Completed action: " + action);
+			this.Log (LogSource.Action, action + " finished");
 
 //			// destroy the tree
 //			if (currentItem != null && currentItem.BT != null) {
@@ -92,10 +114,10 @@ namespace ViAgents
 						workQueue.RemoveAt(0);
 						if (!item.IsExpired(timeControl.SunTime)) {
 							currentItem = item;
-							this.Log("Executing queued item: " + currentItem);							
+							this.Log(LogSource.Queue, "Resume " + currentItem);							
 							ExecuteAction(currentItem);
 						} else {
-							this.Log("Queued item has expired: " + item);
+							this.Log(LogSource.Queue, "Resume item expired: " + item);
 						}
 					} while (currentItem == null && workQueue.Count > 0);
 				} 
@@ -119,13 +141,16 @@ namespace ViAgents
 				return;
 			}
 
-			this.Log (string.Format ("Sensed '{0}' from '{1}', priority {2}", data.SensorRequest, data.Sensor, data.Priority));
+			this.Log (LogSource.Sensor, string.Format ("[{1}]: Request '{0}' ({2})", data.SensorRequest, data.Sensor, data.Priority));
 
 			// check if current item has expired
-			if (currentItem != null && currentItem.IsExpired(timeControl.SunTime)) {
-				this.Log("Item has expired: " + currentItem);
-				if (currentItem.BT != null) currentItem.BT.Stop();
-				currentItem = null;
+			if (currentItem != null && currentItem.IsExpired(timeControl.SunTime))
+			{
+			    this.Log(LogSource.Queue, "Item expired, force finish: " + currentItem);
+			    if (currentItem.BT != null)
+			    {
+			        currentItem.BT.Stop();
+			    }
 			}
 
 			// if we have a smaller priority request we stack it in correct place
@@ -138,14 +163,14 @@ namespace ViAgents
 			// same priority action will be directly terminated, but we can set to wait to finish
 			// if current action is not interrumpible, we wait for that action to finish
 			if (currentAction != null && currentAction.waitToFinish) {
-				this.Log("Waiting for '" + currentItem + "', then " + data);
+				this.Log(LogSource.Queue, "Waiting for '" + currentItem + "', then " + data);
 				InsertToQueue(data);
 				return;
 			}
 			
 			// if we have a higher priority request we stack the current one and execute the new one
 			if (currentItem != null && data.Priority > currentItem.Priority) {
-				this.Log("Action '" + currentItem + "' interrupted by " + data);
+				this.Log(LogSource.Queue, "Action '" + currentItem + "' interrupted by " + data);
 				//currentItem.BT.PauseGraph();
 				InsertToQueue(currentItem);
 			}
@@ -164,7 +189,7 @@ namespace ViAgents
 					for (var j=i; j<workQueue.Count;j++) {
 						// if it is already in queue then 
 						if (workQueue[j].SensorRequest == data.SensorRequest) {
-							this.Log("Already queued item: " + data);
+							this.Log(LogSource.Queue, "Already queued: " + data);
 							return;
 						}
 					}
@@ -176,7 +201,7 @@ namespace ViAgents
 					break;
 				}
 			}
-			this.Log("Queued: " + data);
+			this.Log(LogSource.Queue, "Insert " + data);
 			workQueue.Insert(startIndex, data);
 		}
 		
@@ -184,7 +209,7 @@ namespace ViAgents
 			// find a first action in any action set and execute it
 			for (var i=0; i<actions.Count; i++) {
 				if (actions[i] == null || actions[i].actions.Count == 0) {
-					Debug.LogError(gameObject.name + " has no actions!");
+					Debug.LogError("ERROR: " + gameObject.name + " has no actions!");
 				}
 
 				var action = actions[i].actions.Find(w => w.sensor == data.Sensor && w.sensorRequest == data.SensorRequest);
@@ -195,7 +220,7 @@ namespace ViAgents
 					}
 
 					// set that current item is the requested item
-					this.Log("Executing: " + action);
+					this.Log(LogSource.Action, action + " started");
 					// remember the tree in case we want to execute it again
 
 					//if (data.BT != null) {
@@ -212,7 +237,7 @@ namespace ViAgents
 					return;
 				}
 			}
-			Debug.LogError (string.Format(name +  "'s action for '{0}:{1}' does no exist", data.Sensor, data.SensorRequest));
+			Debug.LogError (string.Format("ERROR: {0}'s action for '{0}:{1}' does no exist", name, data.Sensor, data.SensorRequest));
 		}
 
 		public Object CreateInstance(Object component) {
