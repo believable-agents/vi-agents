@@ -386,7 +386,7 @@ namespace ViAgents.Personality
 		/// true net emotional effect of an event.
 		/// </summary>
 		/// <param name="eventMessage"></param>
-		public void EvaluateEvent (string eventMessage, ViAgent target)
+		public void EvaluateEvent (string eventMessage, PriorityPlanningAgent target)
 		{
 //			// parse input text and generate series of emotional actions and consequences
 //			List<Reaction> events = _emotionProcessor.ProcessText (eventMessage);
@@ -710,7 +710,7 @@ namespace ViAgents.Personality
 		/// </summary>
 		/// <param name="dominantEmotionalEffect">The dominant emotional effect from an evaluated event</param>
 		/// <param name="target">The agent from which an event was caused</param>
-		private void DetermineReactionBasedOnPersonality (KeyValuePair<EmotionType, double> dominantEmotionalEffect, ViAgent target)
+		private void DetermineReactionBasedOnPersonality (KeyValuePair<EmotionType, double> dominantEmotionalEffect, PriorityPlanningAgent target)
 		{
 			if (IsNegativeEmotion (dominantEmotionalEffect.Key)) {
 				if (IsTargetBasedEmotion (dominantEmotionalEffect.Key))
@@ -813,7 +813,7 @@ namespace ViAgents.Personality
 		/// </summary>
 		/// <param name="target">The avatar that caused an event</param>
 		/// <param name="possibleActions">The list of possible actions to choose from</param>
-		private PersonalAction React (IEnumerable<PersonalAction> possibleActions, ViAgent target = null)
+		private PersonalAction React (IEnumerable<PersonalAction> possibleActions, PriorityPlanningAgent target = null)
 		{
 			if (possibleActions == null) {
 				//Log.Warn ("There are no actions!");

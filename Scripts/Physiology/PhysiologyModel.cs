@@ -13,7 +13,7 @@
 
         float sleepMultiplier = 0.0f;
 
-        ViAgent agent;
+        PriorityPlanningAgent agent;
 
         // decay rates
         // we get hungry twice a day
@@ -50,7 +50,7 @@
             set { this.energy = value; }
         }
 
-        public PhysiologyModel(float dayInSeconds, ViAgent agent)
+        public PhysiologyModel(float dayInSeconds, PriorityPlanningAgent agent)
         {
             // initialise multithreader
             //			var mt = Loom.Current;

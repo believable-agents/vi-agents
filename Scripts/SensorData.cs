@@ -1,8 +1,4 @@
-using System;
-using ViAgents;
-using DayNight;
-using NodeCanvas.BehaviourTrees;
-
+using ViAgents.Actions;
 
 namespace ViAgents
 {
@@ -13,8 +9,6 @@ namespace ViAgents
 		public int Priority { get; private set; }
 		public float Start { get; private set; }
 		public float Finish { get; private set; }
-
-		public BehaviourTree BT { get; set; }
 		 
 		public SensorData (Sensor sensor, string request, int priority) : this(sensor, request, priority, -1f, -1f)
 		{
