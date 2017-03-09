@@ -5,7 +5,7 @@ namespace ViAgents.Schedules {
 
 	[System.Serializable]
 	public class Schedule {
-		private readonly List<ScheduledItem> items;
+		public readonly List<ScheduledItem> items;
 
 	    public Schedule(List<ScheduledItem> items)
 	    {

@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace ViAgents.Personality
 {
 	using System;
@@ -6,7 +8,7 @@ namespace ViAgents.Personality
 	{
 		public string ActionName;
 		public ActionType ActionType;
-
+	    public string Goal;
 		//These factors are valid for the range -1 to 1
 		//Neurotic factors:
 		public double Temptation; //(impulsiveness) low = resist urge, medium = sometimes tempted, high=easily tempted
