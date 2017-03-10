@@ -27,8 +27,8 @@ namespace ViAgents
     {
         public LogSource Source;
         public LogLevel Level;
-        private readonly string message;
-        private readonly string time;
+        public readonly string message;
+        public readonly string time;
         private string formattedMessage;
 
         public LogMessage(LogLevel level, LogSource source, string message, string time)
