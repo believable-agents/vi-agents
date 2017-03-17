@@ -169,10 +169,15 @@ namespace ViAgents
         {
             this.Log(LogLevel.Info, LogSource.Action, action + " finished");
 
+            // you cannot continue resoning here as action has to be executed with VIEW agent
+            var item = currentItem;
+
             currentItem = null;
             currentAction = null;
 
-            // you cannot continue resoning here as action has to be executed with VIEW agent
+            if (this.workQueue.Count == 0 && item.Sensor == Sensor.Schedule) {
+                this.Sense(item);
+            }
         }
 
         /// <summary>
